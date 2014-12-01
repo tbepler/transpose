@@ -1,4 +1,9 @@
 
+/*
+Author: Tristan Bepler (tbepler@gmail.com)
+*/
+
+
 #include<iostream>
 #include<fstream>
 #include<sstream>
