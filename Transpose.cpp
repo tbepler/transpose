@@ -42,6 +42,15 @@ void transpose( istream& in, ostream& out ){
 }
 
 int main( int argc, const char* argv[] ){
+    
+    for( int i = 1 ; i < argc ; ++i ){
+        string arg(argv[i]);
+        if( arg == "--help" || arg == "-h" ){
+            cerr << "Usage: transpose [FILES] [ < FILE ]" << endl;
+            return 0;
+        }
+    }
+
 
     if( argc > 1 ){
         for( int i = 1 ; i < argc ; ++i ){
