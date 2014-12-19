@@ -17,58 +17,101 @@ vector<string> split( const string& line ){
     vector<string> tokens;
     string token;
     while( !ss.eof() ){
+        token.clear();
         ss >> token;
-        tokens.push_back( token );
+        if( !token.empty() ){
+            tokens.push_back( token );
+        }
     }
     return tokens;
 }
 
-void transpose( istream& in, ostream& out ){
+struct Transpose{
+
+    vector< vector< string > > entries;
+    size_t maxRow;
+
+};
+
+istream& operator>> ( istream& in, Transpose& t ){
+    t.entries.clear();
+    t.maxRow = 0;
     string line;
-    vector< vector<string> > entries;
     vector<string> row;
-    size_t maxLen = 0;
     while( getline( in, line ) ){
         row = split( line );
-        entries.push_back( row );
-        if( row.size() > maxLen ) maxLen = row.size();
+        t.entries.push_back( row );
+        if( row.size() > t.maxRow ) t.maxRow = row.size();
     }
+    return in;
+}
 
+ostream& operator<< ( ostream& out, Transpose& t ){
     //transpose
-    for( size_t j = 0 ; j < maxLen ; ++j ){
-        for( size_t i = 0 ; i < entries.size() ; ++i ){
-            row = entries[i];
-            if( j < row.size() ) out << row[j];
+    vector<string> row;
+    for( size_t j = 0 ; j < t.maxRow ; ++j ){
+        for( size_t i = 0 ; i < t.entries.size() ; ++i ){
+            row = t.entries[i];
+            if( j < row.size() ){
+                out << row[j];
+            }
             out << " ";
         }
         out << endl;
     }
+    return out;
+}
 
+void usage( ostream& out ){
+    out << "Usage: transpose [--help/-h] [--in-place/-i] [FILES] [ < FILE ]" << endl;
+    out << "-i\t--in-place\tTransposes the files in place" << endl;
+    out << "-h\t--help\tDisplays this help statement" << endl;
 }
 
 int main( int argc, const char* argv[] ){
+
+    vector<const char*> files;
+    bool inplace = false;
     
     for( int i = 1 ; i < argc ; ++i ){
         string arg(argv[i]);
         if( arg == "--help" || arg == "-h" ){
-            cerr << "Usage: transpose [FILES] [ < FILE ]" << endl;
+            usage( cerr );
             return 0;
+        }else if( arg == "--in-place" || arg == "-i" ){
+            inplace = true;
+        }else{
+            files.push_back( argv[i] );
         }
     }
 
-
-    if( argc > 1 ){
-        for( int i = 1 ; i < argc ; ++i ){
-            ifstream in( argv[i] );
-            if( in.is_open() ){
-                transpose( in, cout );
-                in.close();
+    Transpose t;
+    if( !files.empty() ){
+        fstream fin;
+        fstream fout;
+        for( size_t i = 0 ; i < files.size() ; ++i ){
+            fin.open( files[i], ios::in );
+            if( fin.is_open() ){
+                fin >> t;
+                fin.close();
+                if( inplace ){
+                    fout.open( files[i], ios::out | ios::trunc );
+                    if( fout.is_open() ){
+                        fout << t;
+                        fout.close();
+                    }else{
+                        cerr << "Unable to open file for writing: " << files[i] << endl;
+                    }
+                }else{
+                    cout << t;
+                }
             }else{
-                cerr << "Unable to open file: " << argv[i] << endl;
+                cerr << "Unable to open file for reading: " << files[i] << endl;
             }
         }
     }else{
-        transpose( cin, cout );
+        cin >> t;
+        cout << t;
     }
 
 }
